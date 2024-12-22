@@ -5,7 +5,7 @@ const validateCoordinates = (req: Request, res: Response, next: NextFunction) =>
   const {longitude, latitude} = req.body
   
   if (!longitude || !latitude) {
-    res.status(400).json({message: 'Часть координат не задана'})
+    res.status(400).json({message: 'Координаты не заполнены'})
     return
   }
 

@@ -1,4 +1,3 @@
-import OlMap from './components/OlMap';
 import React from 'react';
 import HomePage from './pages/HomePage';
 

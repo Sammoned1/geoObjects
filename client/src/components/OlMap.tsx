@@ -7,7 +7,7 @@ import { OSM } from 'ol/source';
 import VectorSource from 'ol/source/Vector';
 import Icon from 'ol/style/Icon';
 import Style from 'ol/style/Style';
-import React, { FC, useEffect, useRef, useState } from 'react';
+import React, { FC, useEffect, useRef } from 'react';
 import { Ipoint } from '../types/pointTypes';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store';
