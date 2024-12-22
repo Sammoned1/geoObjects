@@ -41,17 +41,17 @@
   ```
 
 - Маршруты для проверки программы
-  ```http
+  ```
   @base=http://localhost:5000
 
-  // Получение всех геообъектов
+  ### Получение всех геообъектов
   GET {{base}}/api/geoobjects
 
-  // Получение всех геообъектов с фильтрацией по типу
+  ### Получение всех геообъектов с фильтрацией по типу
   GET {{base}}/api/geoobjects?type={type}
 
-  // Создание нового геообъекта. Принимает JSON с данными объекта
-  POST {{base}}/api/geoobjects             
+  ### Создание нового геообъекта. Принимает JSON с данными объекта
+  POST {{base}}/api/geoobjects
   Content-Type: application/json
 
   {
@@ -61,7 +61,7 @@
     "type": "string"
   }
 
-  // Обновление информации о геообъекте по ID
+  ### Обновление информации о геообъекте по ID
   PUT {{base}}/api/geoobjects/{id}
   Content-Type: application/json
 
@@ -72,6 +72,6 @@
     "type": "string"
   }
 
-  // Удаление геообъекта по ID
+  ### Удаление геообъекта по ID
   DELETE {{base}}/api/geoobjects/{id}
   ```
