@@ -52,11 +52,19 @@ export class Geoobjects {
 
   static async deleteObject (id: number) {
     try {
-      await Points.destroy({
+      const record = await Points.findOne({
         where: {
           id
         }
       })
+
+      if (record) {
+        record.destroy()
+        record.save()
+        return true
+      } else {
+        return false
+      }
     } catch (e) {
       console.error(e)
       throw e

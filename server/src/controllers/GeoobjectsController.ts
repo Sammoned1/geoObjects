@@ -18,7 +18,7 @@ export class GeoobjectsController {
 
       const result = await Geoobjects.createObject(insertObj)
 
-      res.status(200).json(result)
+      res.status(201).json(result)
     } catch (e) {
       res.status(500).json(e)
     }
@@ -51,8 +51,13 @@ export class GeoobjectsController {
       }
       
       const record = await Geoobjects.updateObject(+id, updateObj)
+      
+      if (!record) {
+        res.status(404).json({message: 'Метка с таким id не найдена'})
+        return
+      }
 
-      res.status(200).json(record)
+      res.status(202).json(record)
     } catch (e) {
       console.error(e)
       res.status(500).json(e)
@@ -63,9 +68,14 @@ export class GeoobjectsController {
     try {
       const {id} = req.params
 
-      await Geoobjects.deleteObject(+id)
+      const result = await Geoobjects.deleteObject(+id)
 
-      res.sendStatus(200)
+      if (!result) {
+        res.status(404).json({message: 'Метка с таким id не найдена'})
+        return
+      }
+
+      res.sendStatus(204)
     } catch (e) {
       res.status(500).json(e)
     }

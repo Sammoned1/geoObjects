@@ -1,58 +1,190 @@
-import request from 'supertest';
-import express from 'express';
-import validateCoordinates from './middleware/validation';
+import {validate} from './middleware/validation';
 import {describe, expect, it} from '@jest/globals';
-
-const app = express();
-app.use(express.json());
-
-app.post('/test', validateCoordinates, (req, res) => {
-  res.status(200).json({ message: 'Координаты верны' });
-});
+import httpMocks from 'node-mocks-http'
 
 describe('validateCoordinates', () => {
-  it('Должен вернуть 400, если пришел запрос с незаполненными координатами', async () => {
-    const response = await request(app)
-      .post('/test')
-      .send({});
+  it.each<undefined | null | string>([undefined, null, ""])('Должен вернуть 400, если пришел запрос с незаполненным названием метки', (name) => {
+    const request = httpMocks.createRequest({
+      method: 'POST',
+      url: '/api/geoobjects',
+      body: {
+        name,
+        longitude: 55,
+        latitude: 55
+      }
+    })
 
-    expect(response.status).toBe(400);
-    expect(response.body.message).toBe('Координаты не заполнены');
+    const response = httpMocks.createResponse()
+    validate(request, response, () => {})
+
+    const data = response._getJSONData()
+
+    expect(response.statusCode).toBe(400);
+    expect(data.message).toBe('Название метки должно быть заполнено');
   });
 
-  it('Должен вернуть 400, если тип координат не число', async () => {
-    const response = await request(app)
-      .post('/test')
-      .send({longitude: '57', latitude: 37});
+  it.each<string>(["a".repeat(256), "b".repeat(999)])('Должен вернуть 400, если длина больше 255 символов', (name) => {
+    const request = httpMocks.createRequest({
+      method: 'POST',
+      url: '/api/geoobjects',
+      body: {
+        name,
+        longitude: 55,
+        latitude: 55
+      }
+    })
 
-    expect(response.status).toBe(400);
-    expect(response.body.message).toBe('Оба значения должны быть числом');
+    const response = httpMocks.createResponse()
+    validate(request, response, () => {})
+
+    const data = response._getJSONData()
+
+    expect(response.statusCode).toBe(400);
+    expect(data.message).toBe('Название метки не должно превышать 255 символов');
   });
 
-  it('Должен вернуть 400, если долгота вне диапазона', async () => {
-    const response = await request(app)
-      .post('/test')
-      .send({longitude: 195, latitude: 50});
+  it.each<{
+    longitude: null | undefined,
+    latitude: null | undefined
+  }>([
+    {
+      longitude: undefined,
+      latitude: undefined
+    },
+    {
+      longitude: null,
+      latitude: null
+    }
+  ])('Должен вернуть 400, если пришел запрос с незаполненными координатами', ({longitude, latitude}) => {
+    const request = httpMocks.createRequest({
+      method: 'POST',
+      url: '/api/geoobjects',
+      body: {
+        longitude,
+        latitude,
+        name: "foo"
+      }
+    })
 
-    expect(response.status).toBe(400);
-    expect(response.body.message).toBe('Долгота должна быть в диапазоне от -180 до 180');
+    const response = httpMocks.createResponse()
+    validate(request, response, () => {})
+
+    const data = response._getJSONData()
+
+    expect(response.statusCode).toBe(400);
+    expect(data.message).toBe('Координаты не заполнены');
   });
 
-  it('Должен вернуть 400, если широта вне диапазона', async () => {
-    const response = await request(app)
-      .post('/test')
-      .send({longitude: -100, latitude: 150});
+  it.each<{
+    longitude: string | boolean,
+    latitude: string | boolean
+  }>([
+    {
+      longitude: "abcac",
+      latitude: "a"
+    },
+    {
+      longitude: false,
+      latitude: true
+    }
+  ])('Должен вернуть 400, если тип координат не число', ({longitude, latitude}) => {
+      const request = httpMocks.createRequest({
+        method: 'POST',
+        url: '/api/geoobjects',
+        body: {
+          longitude,
+          latitude,
+          name: "foo"
+        }
+      })
+  
+      const response = httpMocks.createResponse()
+      validate(request, response, () => {})
+  
+      const data = response._getJSONData()
 
-    expect(response.status).toBe(400);
-    expect(response.body.message).toBe('Широта должна быть в диапазоне от -90 до 90');
+    expect(response.statusCode).toBe(400);
+    expect(data.message).toBe('Оба значения должны быть числом');
   });
 
-  it('Должен вернуть 200, если координаты верны', async () => {
-    const response = await request(app)
-      .post('/test')
-      .send({longitude: 36, latitude: 57});
+  it.each<number>([-180.1, -999, 180.1, 999])('Должен вернуть 400, если долгота равна %i', (longitude) => {
+    const request = httpMocks.createRequest({
+      method: 'POST',
+      url: '/api/geoobjects',
+      body: {
+        longitude,
+        latitude: 55,
+        name: "foo"
+      }
+    })
 
-    expect(response.status).toBe(200);
-    expect(response.body.message).toBe('Координаты верны');
+    const response = httpMocks.createResponse()
+    validate(request, response, () => {})
+
+    const data = response._getJSONData()
+
+    expect(response.statusCode).toBe(400);
+    expect(data.message).toBe('Долгота должна быть в диапазоне от -180 до 180');
+  });
+
+  it.each<number>([-90.1, -999, 90.1, 999])('Должен вернуть 400, если широта равна %i', (latitude) => {
+    const request = httpMocks.createRequest({
+      method: 'POST',
+      url: '/api/geoobjects',
+      body: {
+        longitude: -100,
+        latitude,
+        name: "foo"
+      }
+    })
+
+    const response = httpMocks.createResponse()
+    validate(request, response, () => {})
+
+    const data = response._getJSONData()
+
+    expect(response.statusCode).toBe(400);
+    expect(data.message).toBe('Широта должна быть в диапазоне от -90 до 90');
+  });
+
+  it.each<{
+    longitude: number,
+    latitude: number,
+    name: string
+  }>([
+    {
+      longitude: 180,
+      latitude: 90,
+      name: "foo",
+    },
+    {
+      longitude: -180,
+      latitude: -90,
+      name: "foo"
+    },
+    {
+      longitude: 0,
+      latitude: 0,
+      name: "foo"
+    },
+    {
+      longitude: 0,
+      latitude: 0,
+      name: "a".repeat(255)
+    }
+  ])('Должен вернуть 200, если координаты равны $longitude, $latitude, имя равно $name', (body) => {
+    const request = httpMocks.createRequest({
+      method: 'POST',
+      url: '/api/geoobjects',
+      body
+    })
+
+    const response = httpMocks.createResponse()
+    validate(request, response, () => {})
+
+    const data = response._getData()
+    
+    expect(response.statusCode).toBe(200);
+    expect(data).toBe("")
   });
 });

@@ -1,10 +1,21 @@
 
 import { NextFunction, Request, Response } from 'express';
 
-const validateCoordinates = (req: Request, res: Response, next: NextFunction) => {
-  const {longitude, latitude} = req.body
+export const validate = (req: Request, res: Response, next: NextFunction) => {
+  const {longitude, latitude, name} = req.body
+
+  if (!name) {
+    res.status(400).json({message: 'Название метки должно быть заполнено'})
+    return
+  }
+
+  if (name.length > 255) {
+    res.status(400).json({message: 'Название метки не должно превышать 255 символов'})
+    return
+  }
   
-  if (!longitude || !latitude) {
+  if (longitude === undefined || longitude === null ||
+      latitude === undefined || latitude === null) {
     res.status(400).json({message: 'Координаты не заполнены'})
     return
   }
@@ -26,5 +37,3 @@ const validateCoordinates = (req: Request, res: Response, next: NextFunction) =>
 
   next()
 }
-
-export default validateCoordinates
